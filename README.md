@@ -16,7 +16,7 @@ python src\livechat_to_csv.py video_id
 ## 出力csvのデータ形式
 
 |name|type|remarks|
-|-::|-::|-::|
+|:--|:--|:--|
 |datetime|str|日時|
 |timestamp|int|チャット投稿時刻（unixタイムスタンプ、ミリ秒）|
 |elapsedTime|str|経過時間|
