@@ -52,8 +52,10 @@ class LocalCsvFile():
             raise Exception(e)
 
 csvfile = LocalCsvFile(f"youtube_{video_id}.csv")
+
+columns = ["datetime","timestamp", "elapsedTime", "type","id","author_name", "isChatSponsor", "message", "amountValue", "amouuntString", "currency"]
 try:
-    csvfile.create(["datetime","type","id","author_name","message"])
+    csvfile.create(columns)
 except FileExistsError:
     print("作成済み")
 
@@ -64,18 +66,23 @@ tzinfo=datetime.timezone(datetime.timedelta(hours=9))
 while chat.is_alive():
     before_id = 0
     for c in chat.get().items:
-        # if c.id != before_id:
-        #   before_id = c.id
-          #print(f"datetime:{datetime.datetime.fromtimestamp(c.timestamp/1000, tz=tzinfo)}\ntype:{c.type}\nid:{c.id}\nauthor:[{c.author.name}]\nmessage:{c.message}\033[4A",end="")
-
-        df = pd.DataFrame(csvfile.read(), columns=["datetime","type","id","author_name","message"])
+        
+        df = pd.DataFrame(csvfile.read(), columns=columns)
         if c.id in df["id"].values:
             break
+
         print(f"{c.author.name}:{c.message}")
+
         csvfile.append([
             datetime.datetime.fromtimestamp(c.timestamp/1000, tz=tzinfo),
+            c.timestamp,
+            c.elapsedTime,
             c.type,
             c.id,
             c.author.name,
-            c.message
+            c.author.isChatSponsor,
+            c.message,
+            c.amountValue,
+            c.amountString,
+            c.currency
         ])
