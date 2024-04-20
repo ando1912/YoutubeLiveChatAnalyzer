@@ -1,4 +1,3 @@
-import sys
 import pytchat
 import datetime
 import argparse
@@ -63,15 +62,46 @@ except FileExistsError:
 chat = pytchat.create(video_id=video_id, topchat_only=False)
 tzinfo=datetime.timezone(datetime.timedelta(hours=9))
 
+# 直近n秒間のみのタイムログを保存するリスト
+def filter_old_log(loglist, filter_sec):
+    nowtime = datetime.datetime.now()
+
+    filtered_logs = []
+
+    for log in loglist:
+        # 差がfilter_sec以下の場合、ログを追加する
+        if (nowtime - log).total_seconds() <= filter_sec:
+            filtered_logs.append(log)
+    
+    return filtered_logs
+
+btime = datetime.datetime.now()
+cnt = 0
+chat_per_sec = 0
+timelog_list = []
+
 while chat.is_alive():
     before_id = 0
+
     for c in chat.get().items:
         
         df = pd.DataFrame(csvfile.read(), columns=columns)
         if c.id in df["id"].values:
             break
+        timelog_list.append(datetime.datetime.now())
+        timelog_list = filter_old_log(timelog_list, 10)
+        max_time = max(timelog_list)
+        min_time = min(timelog_list)
 
-        print(f"{c.author.name}:{c.message}")
+        if max_time != min_time:
+            dif_time = (max(timelog_list) - min(timelog_list)).total_seconds()
+        else:
+            dif_time = 1
+        chat_per_sec = len(timelog_list) / dif_time
+
+
+        # print("\r"+f"{chat_per_sec}/s\t{c.author.name}:{c.message}",end="")
+        print("\r" + f"ChatPerSec : {chat_per_sec:6.2f}/s : count = {len(timelog_list)} : difftime={dif_time}", end="")
 
         csvfile.append([
             datetime.datetime.fromtimestamp(c.timestamp/1000, tz=tzinfo),
